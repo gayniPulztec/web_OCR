@@ -1,0 +1,103 @@
+﻿@model web_ocr.Models.Document;
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+@{ var demoImg = "~/assets/demo_img.jpg";}
+
+
+<div class="container-fluid">
+    <h1>Please take a photo of the Document to Continue</h1>
+
+    <div class="row col-12">
+        <div class="col-6">
+            <div id="my_camera" style="width:320px; height:240px;"></div>
+            <br />
+            <a class="btn btn-primary" href="javascript:void(take_snapshot())" id="sn1">Take Snapshot</a>
+        </div>
+
+        <div class="col-6">
+            <div class="row">
+                <div id="my_result" class="col-6" style="margin-right:20px">
+                    <img asp-for="imgstrn" id="img1" src="@Href(demoImg)" width="320" height="240" />
+                </div>
+                <a class="btn btn-info invisible " style="margin-top:15px;margin-left: 0px; height: min-content;" id="rset1" href="javascript:void(reset())">Reset Image</a><br />
+            </div>
+            <br />
+        </div>
+    </div>
+
+    <div>
+        <form asp-action="DataProcess" method="post">
+            <input type="text" hidden id="imgpath" asp-for="imagepath" />
+            <button class="btn btn-primary form-control" style="margin:15px">Continue</button>
+        </form>
+    </div>
+
+    <div class="row col-12">
+        <div class="col-5 invisible" id="notice">
+            <h3>Please turn the document to the other side</h3>
+            <a class="btn btn-primary invisible" id="sn2" href="javascript:void(take_snapshot2())" style="height: fit-content; margin-top: auto;">Take Snapshot</a>
+        </div>
+        <div class="col-6" style="margin:unset">
+            <div class="row" style="margin-left:unset">
+                <div id="my_result1" style="margin-right:20px"></div>
+                <a class="btn btn-info invisible" id="rset2" href="javascript:void(reset1())" style="margin-top:15px; height: min-content;">Reset Image</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<environment include="Development">
+    <script src="~/js/webcam_snapshot.js"></script>
+</environment>
+
+<script language="JavaScript">
+    Webcam.attach('#my_camera');
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var canvas = document.createElement('canvas');
+        video = Webcam.video;
+
+        video.addEventListener('play', function () {
+            var ctx = canvas.getContext('2d');
+            canvas.width = video.videoWidth / 3;
+            canvas.height = video.videoHeight / 3;
+            console.log("video.src", video.src)
+            if (video.paused || video.ended) return false;
+            function loop() {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                ctx.strokeRect(20, 20, canvas.width / 2 - 40, canvas.height / 2 - 40);
+                setTimeout(loop, 1000 / 30);
+                ctx.save()
+            }
+            loop();
+            //canvas.style.position = 'absolute';
+            canvas.id = 'webcam_canvas'
+            canvas.classList.add("col-12")
+        }, false);
+
+        document.getElementById('my_camera').append(canvas);
+
+    }, false);
+
+
+    function take_snapshot() {
+        Webcam.snap(function (data_uri) {
+            document.getElementById('my_result').innerHTML = "";
+            document.getElementById('my_result').innerHTML = '<img asp-for="imgstrn"  id="img1" src="' + data_uri + '" />';
+        });
+
+        capture = document.getElementById('img1');
+        console.log(capture.width, capture.height)
+        dataURL = capture.src
+        //dataURL = canvas.toDataURL("image/jpeg");
+        Webcam.upload(dataURL, "Home/GetImage", false);
+    }
+
+    function reset() {
+        Webcam.reset();
+    }
+
+</script>
